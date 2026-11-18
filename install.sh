@@ -22,7 +22,7 @@ set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 SCALE="${SCALE:-2}"   # 2 = 200% (schermo 14" 2560x1440). Per Full HD: SCALE=1
 KUBOOS="${KUBOOS:-1}" # 1 = applica il tema KuboOS, 0 = solo Plasma minimale
-TEMA_URL="${TEMA_URL:-https://github.com/danymarchetti2000-ita/KuboView/releases/latest/download}"
+TEMA_URL="${TEMA_URL:-https://raw.githubusercontent.com/danymarchetti2000-ita/KuboView/main/pacchetti}"
 USER_NAME="${SUDO_USER:-$(logname 2>/dev/null || echo root)}"
 
 log() { printf '\n\033[1;33m== %s ==\033[0m\n' "$*"; }

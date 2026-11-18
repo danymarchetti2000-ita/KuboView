@@ -28,7 +28,7 @@ wget -qO- https://raw.githubusercontent.com/danymarchetti2000-ita/KuboView/main/
 | App | Dolphin, Konsole, Kate, Ark, Spectacle, Gwenview, Okular, Discover + Flatpak, **KDE Connect** |
 | Browser | Firefox ufficiale Mozilla (non ESR) |
 | Leggerezza | Baloo (indicizzazione) e KWallet **disattivati** |
-| Tema | pacchetti `kuboos-look` e `kuboos-defaults` dalle [release](https://github.com/danymarchetti2000-ita/KuboView/releases) |
+| Tema | pacchetti `kuboos-look` e `kuboos-defaults` dalla cartella [`pacchetti/`](pacchetti) |
 | Sessione | X11 predefinita al primo accesso |
 | HiDPI | scala 200% (modifica `SCALE` nello script per altri schermi) |
 | Rete | NetworkManager; le password Wi-Fi restano nel sistema (spunta *"Tutti gli utenti possono connettersi"*) |

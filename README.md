@@ -1,7 +1,7 @@
 # KuboView — installer KuboOS
 
 Trasforma un sistema **installato senza desktop** in un desktop **KDE Plasma 6
-minimale**, pronto per il tema KuboOS.
+minimale** con il tema **KuboOS** già applicato (Platinum, Chicago, icone pixel art).
 
 Basi supportate: **Ubuntu Server 26.04 LTS** (snap rimossi e bloccati) e **Debian 13**.
 Ubuntu 24.04 non è supportata perché ha ancora Plasma 5.
@@ -28,6 +28,7 @@ wget -qO- https://raw.githubusercontent.com/danymarchetti2000-ita/KuboView/main/
 | App | Dolphin, Konsole, Kate, Ark, Spectacle, Gwenview, Okular, Discover + Flatpak, **KDE Connect** |
 | Browser | Firefox ufficiale Mozilla (non ESR) |
 | Leggerezza | Baloo (indicizzazione) e KWallet **disattivati** |
+| Tema | pacchetti `kuboos-look` e `kuboos-defaults` dalle [release](https://github.com/danymarchetti2000-ita/KuboView/releases) |
 | Sessione | X11 predefinita al primo accesso |
 | HiDPI | scala 200% (modifica `SCALE` nello script per altri schermi) |
 | Rete | NetworkManager; le password Wi-Fi restano nel sistema (spunta *"Tutti gli utenti possono connettersi"*) |
@@ -35,3 +36,10 @@ wget -qO- https://raw.githubusercontent.com/danymarchetti2000-ita/KuboView/main/
 Su Ubuntu gli snap vengono rimossi e `snapd` bloccato con un pin APT; Firefox arriva dal repository Mozilla.
 
 Schermo Full HD? Usa `... | sudo env SCALE=1 bash`.
+
+Solo Plasma minimale, senza tema: `... | sudo env KUBOOS=0 bash`.
+
+## Crediti
+Icone basate su [SerenityOS](https://github.com/SerenityOS/serenity) (licenza BSD-2, testo in
+`/usr/share/icons/KuboOS-Pixel/LICENSE-SerenityOS`); font ChicagoFLF (pubblico dominio),
+Pixel Operator (CC0). I pacchetti del tema per Ubuntu si generano con `tools/build-debs-ubuntu.sh`.

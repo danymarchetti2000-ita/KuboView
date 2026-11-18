@@ -9,8 +9,10 @@
 #  (Ubuntu 24.04 NON è supportata: ha Plasma 5, il tema KuboOS è per Plasma 6)
 #
 #  Cosa installa: solo Plasma essenziale + app di base + KDE Connect
+#                 + tema KuboOS (pacchetti kuboos-look e kuboos-defaults)
 #  Baloo e KWallet restano installati (dipendenze obbligatorie di KDE)
 #  ma vengono DISATTIVATI. Sessione predefinita: X11 (niente lag mouse).
+#  Variabili:  SCALE=1|2 (scala schermo)   KUBOOS=0 (senza tema)
 #
 #  Uso:  wget -qO- https://raw.githubusercontent.com/danymarchetti2000-ita/KuboView/main/install.sh | sudo bash
 # =====================================================================
@@ -19,6 +21,8 @@ set -euo pipefail
 [[ $EUID -eq 0 ]] || { echo "Esegui con sudo (es. wget -qO- <link> | sudo bash)"; exit 1; }
 export DEBIAN_FRONTEND=noninteractive
 SCALE="${SCALE:-2}"   # 2 = 200% (schermo 14" 2560x1440). Per Full HD: SCALE=1
+KUBOOS="${KUBOOS:-1}" # 1 = applica il tema KuboOS, 0 = solo Plasma minimale
+TEMA_URL="${TEMA_URL:-https://github.com/danymarchetti2000-ita/KuboView/releases/latest/download}"
 USER_NAME="${SUDO_USER:-$(logname 2>/dev/null || echo root)}"
 
 log() { printf '\n\033[1;33m== %s ==\033[0m\n' "$*"; }
@@ -120,13 +124,26 @@ apt-get update
 apt-get install -y --no-install-recommends "${PKGS[@]}"
 
 # ---------------------------------------------------------------------
-log "4/8  Alleggerimento: Baloo e KWallet disattivati per tutti gli utenti"
+log "4/8  Tema KuboOS e alleggerimento (Baloo e KWallet disattivati)"
 # ---------------------------------------------------------------------
-mkdir -p /etc/xdg
-cat > /etc/xdg/baloofilerc <<'EOF'
+if [[ $KUBOOS == 1 ]]; then
+  T=$(mktemp -d)
+  for d in kuboos-look kuboos-defaults; do
+    wget -q --show-progress -O "$T/$d.deb" "$TEMA_URL/$d.deb"
+  done
+  chmod 755 "$T"; chmod 644 "$T"/*.deb
+  # kuboos-defaults porta già: kdeglobals, KWin Platinum, Baloo spento,
+  # Wi-Fi salvato nel sistema, SDDM, zram, earlyoom, GRUB/Plymouth KuboOS
+  apt-get install -y --no-install-recommends "$T/kuboos-look.deb" "$T/kuboos-defaults.deb"
+  rm -rf "$T"
+else
+  mkdir -p /etc/xdg
+  cat > /etc/xdg/baloofilerc <<'EOF'
 [Basic Settings]
 Indexing-Enabled=false
 EOF
+fi
+mkdir -p /etc/xdg
 cat > /etc/xdg/kwalletrc <<'EOF'
 [Wallet]
 Enabled=false
@@ -137,16 +154,28 @@ EOF
 log "5/8  HiDPI (${SCALE}x) e sessione X11 predefinita"
 # ---------------------------------------------------------------------
 DPI=$((96 * SCALE))
-cat > /etc/xdg/kdeglobals <<EOF
-[KScreen]
-ScaleFactor=${SCALE}
-EOF
+# scala dello schermo nella configurazione dell'utente (non tocca i file del tema)
+if [[ $USER_NAME != root ]]; then
+  H=$(getent passwd "$USER_NAME" | cut -d: -f6)
+  install -d -o "$USER_NAME" -g "$USER_NAME" "$H/.config"
+  if ! grep -q '^\[KScreen\]' "$H/.config/kdeglobals" 2>/dev/null; then
+    printf '\n[KScreen]\nScaleFactor=%s\n' "$SCALE" >> "$H/.config/kdeglobals"
+    chown "$USER_NAME:$USER_NAME" "$H/.config/kdeglobals"
+  fi
+fi
 cat > /etc/xdg/kcmfonts <<EOF
 [General]
 forceFontDPI=${DPI}
 EOF
 mkdir -p /etc/sddm.conf.d /var/lib/sddm
-cat > /etc/sddm.conf.d/10-kuboos.conf <<EOF
+if [[ $KUBOOS == 1 ]]; then
+  # SDDM di KuboOS (schermata di accesso su Wayland): aggiungo solo la scala
+  cat > /etc/sddm.conf.d/20-kuboview-hidpi.conf <<EOF
+[General]
+GreeterEnvironment=QT_WAYLAND_SHELL_INTEGRATION=layer-shell,QT_SCALE_FACTOR=${SCALE}
+EOF
+else
+  cat > /etc/sddm.conf.d/10-kuboview.conf <<EOF
 [Theme]
 Current=breeze
 
@@ -156,6 +185,8 @@ GreeterEnvironment=QT_SCREEN_SCALE_FACTORS=${SCALE},QT_FONT_DPI=${DPI}
 [X11]
 ServerArguments=-nolisten tcp -dpi ${DPI}
 EOF
+fi
+# al primo accesso SDDM propone la sessione X11 (poi ricorda l'ultima scelta)
 cat > /var/lib/sddm/state.conf <<'EOF'
 [Last]
 Session=/usr/share/xsessions/plasmax11.desktop
@@ -212,7 +243,7 @@ apt-get clean
 log "FATTO — riavvia con:  sudo reboot"
 cat <<'EOF'
 Dopo il riavvio:
- - Wi-Fi: collegati dall'icona di rete e spunta "Tutti gli utenti possono
-   connettersi a questa rete" -> la password resta nel sistema, non in KWallet
+ - Wi-Fi: collegati dall'icona di rete (la password resta nel sistema, non in KWallet)
  - Scala: se serve, Impostazioni di sistema -> Schermo -> Scala
+ - Sessione: in basso nella schermata di accesso puoi scegliere X11 o Wayland
 EOF
